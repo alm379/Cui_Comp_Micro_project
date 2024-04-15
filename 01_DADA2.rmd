@@ -68,7 +68,7 @@ Output that we need:
 # Load Libraries 
 ```{r load-libraries}
 # Efficient package loading with pacman 
-# Don't forget to install pacman and DT if you don't have it yet. :) 
+# Don't forget to install pacman and DT if you don't have it yet. :)git
 #install.packages('pacman')
 pacman::p_load(tidyverse, BiocManager, devtools, dada2, 
                phyloseq, patchwork, DT, iNEXT, vegan,
@@ -255,9 +255,8 @@ postQC_aggregate_plot <-
 postQC_aggregate_plot
 ```
 
-The sequences are even higher quality, with the last 3 bases trimmed to remove the low quality base, 247.
+The sequences are even higher quality, with the last 3 bases trimmed to remove the low quality read, 247. The Phred scores, which were above 30 to begin with, are even higher now.
 
-Here, we see the sequences are improved from before. The very low quality that we saw in the pre-QC plots is mostly gone. If we wanted, we could trim more of the forward sequence. However, the quality here is above a phred score of 30, which I feel ok with. 
 
 
 ## Stats on read output from `filterAndTrim`
@@ -275,10 +274,8 @@ filtered_df %>%
           median_percent_retained = (median(reads.out)/median(reads.in)))
 ```
 
-[Insert paragraph interpreting the results above]
+86.33% of reads were retained post-filtering (2827430 reads retained), which seems to be enough reads to assign taxonomy. This level of read retention indicates that the initial data was of relatively high quality and that the filterAndTrim commands were effective at removing the lowest quality reads. As mentioned above, the "trimRight" parameter was set to "3" to ensure the removal of low quality read number 247.
 
-- How many reads got through? Is it "enough"?
-- Should you play with the paratmeters in `filterAndTrim()` more?  If so, which parameters? 
 
 
 ### Visualize QC differences in plot 
@@ -313,7 +310,7 @@ Ok, that said. Let's now infer error rates for all possible transitions within p
 ```{r learn-errors, fig.width=12, fig.height=8}
 # Forward reads 
 error_forward_reads <- 
-  learnErrors(filtered_forward_reads, multithread = TRUE)
+  learnErrors(filtered_forward_reads, multithread = 5)
 # Plot Forward  
 forward_error_plot <- 
   plotErrors(error_forward_reads, nominalQ = TRUE) + 
@@ -321,7 +318,7 @@ forward_error_plot <-
 
 # Reverse reads 
 error_reverse_reads <- 
-  learnErrors(filtered_reverse_reads, multithread = TRUE)
+  learnErrors(filtered_reverse_reads, multithread = 5)
 # Plot reverse
 reverse_error_plot <- 
   plotErrors(error_reverse_reads, nominalQ = TRUE) + 
@@ -331,9 +328,7 @@ reverse_error_plot <-
 forward_error_plot + reverse_error_plot
 ```
 
-[Insert paragraph interpreting the plot above  above]
-
-- The error rates for each possible transition (A→C, A→G, …) are shown in the plot above. 
+The error rates for each possible transition (A→C, A→G, …) are shown in the plot above. The graphs estimate generally higher error rates than expected under the nominal definition of the Q-score. The error rates generally decrease with quality score, but increase sharply at the highest quality score (far right of the graphs).
 
 Details of the plot: 
 - **Points**: The observed error rates for each consensus quality score.  
@@ -352,7 +347,7 @@ Similar to what is mentioned in the dada2 tutorial: the estimated error rates (b
 # Infer ASVs on the forward sequences
 dada_forward <- dada(filtered_forward_reads,
                      err = error_forward_reads, 
-                     multithread = TRUE)
+                     multithread = 5)
 
 typeof(dada_forward)
 # Grab a sample and look at it 
@@ -362,7 +357,7 @@ dada_forward$`20211005-MA-CWS1P_R1_filtered.fastq.gz`
 # Infer ASVs on the reverse sequences 
 dada_reverse <- dada(filtered_reverse_reads,
                      err = error_reverse_reads,
-                     multithread = TRUE)
+                     multithread = 5)
 
 # Inspect 
 dada_reverse[1]
@@ -460,7 +455,7 @@ Chimera removal is an essential step in the analysis of 16S sequencing data to i
 # Remove the chimeras in the raw ASV table
 noChimeras_ASV_table <- removeBimeraDenovo(raw_ASV_table_trimmed, 
                                            method="consensus", 
-                                           multithread=TRUE, verbose=TRUE)
+                                           multithread=5, verbose=TRUE)
 
 # Check the dimensions
 dim(noChimeras_ASV_table)
@@ -532,7 +527,7 @@ Here, we will use the silva database version 138!
 taxa_train <- 
   assignTaxonomy(noChimeras_ASV_table, 
                  "/workdir/in_class_data/taxonomy/silva_nr99_v138.1_train_set.fa.gz", 
-                 multithread=TRUE)
+                 multithread=5)
 
 # Add the genus/species information 
 taxa_addSpecies <- 

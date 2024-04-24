@@ -252,7 +252,7 @@ iNEXT_manual_df %>%
 Abundance-driven community differences seem to be most evident at the medium nitrogen level. There are 2 sample outliers for low ASVs in the Inverse Simpson plot for the low nitrogen treatments. I interpret this to mean these 2 samples have relatively more low-abundance taxa. In the final rarefaction plot presented below, these samples are shown to be from unplanted soils.
 
 A scond rarefaction plot to see rarefaction patterns color coded by treatment, separated by nitrogen treatment.
-```{r iNEXT-manual, fig.width=6, fig.height=6}
+```{r iNEXT-manual_2, fig.width=6, fig.height=6}
 # Plot it - Rarefaction Curve 
 iNEXT_manual_df %>%
   # Filter out rows that are calcaulted by rarefaction from iNEXT
@@ -273,7 +273,7 @@ iNEXT_manual_df %>%
 ```
 
 Lets see how sampling date ("growth stage") rarefaction plots, color coded by nitrogen level give us different information:
-```{r iNEXT-manual, fig.width=6, fig.height=6}
+```{r iNEXT-manual_3, fig.width=6, fig.height=6}
 # Plot it - Rarefaction Curve 
 iNEXT_manual_df_2 %>%
   # Filter out rows that are calcaulted by rarefaction from iNEXT
@@ -296,7 +296,7 @@ iNEXT_manual_df_2 %>%
 Rarefaction patterns for high nitrogen samples seem to group together, especially at the earlier time point. One sample outlier in the Inverse Simpson graph for the medium nitrogen treatment at the later time point becomes visible.
 
 Next, lets see rarefaction patterns still color coded by nitrogen treatment, but comparing planted vs unplanted treatments.
-```{r iNEXT-manual, fig.width=6, fig.height=6}
+```{r iNEXT-manual_4, fig.width=6, fig.height=6}
 # Plot it - Rarefaction Curve 
 iNEXT_manual_df_3 %>%
   # Filter out rows that are calculted by rarefaction from iNEXT
@@ -318,7 +318,7 @@ iNEXT_manual_df_3 %>%
 Rarefaction patterns for high nitrogen samples still group together in planted and unplanted treatments. The sample outlier at the second time point in the Inverse Simpson plot discussed above appears to be from a planted treatment, with the lowest effective number of ASVs being from a planted, medium nitrogen treatment sample in this plot.
 
 Finally, color code by sampling date and separate by treatment.
-```{r iNEXT-manual, fig.width=6, fig.height=6}
+```{r iNEXT-manual_5, fig.width=6, fig.height=6}
 # Plot it - Rarefaction Curve 
 iNEXT_manual_df_3 %>%
   # Filter out rows that are calculted by rarefaction from iNEXT
@@ -346,13 +346,16 @@ Overall richness differs most evidently by time point in the planted treatments,
 Now, let's zoom in on a bit of a better view of the data by visualizing it in a boxplot...  
 
 ```{r div-dfs}
-n_level_names <- c(0,150,300)
-names(n_level_names) <- c("Low N","Med N","High N")
-planted_names <- c ("Planted", "Unplanted")
-names(planted_names) <- c ("Plant", "No\nPlant")
-growth_stage_names <- c("30","75")
-names(growth_stage_names) <- c("Day 30","Day75")
+n_level_names <- c("Low N","Med N","High N")
+names(n_level_names) <- c("0","50","300")
 
+planted_names <- c ("Plant", "No Plant")
+names(planted_names) <- c ("Planted", "Unplanted")
+
+growth_stage_names <- c("Day 30","Day 75")
+names(growth_stage_names) <- c("30","75")
+
+# Make a dataframe
 obs_div_df <- 
   iNEXT_manual_df %>%
   dplyr::filter(Method == "Observed") %>%
@@ -382,6 +385,7 @@ head(obs_div_df_3)
 
 ```{r div-boxplot, fig.height = 3.5, fig.width = 9}
 # Boxplots by nitrogen level 
+# Boxplots by station 
 obs_div_df %>%
   ggplot(aes(x = n_level_names, y = qD, fill = n_level, color = n_level)) + 
   facet_wrap(~Order.q, scales = "free") + 
@@ -395,11 +399,78 @@ obs_div_df %>%
         axis.title.x = element_blank(),
         legend.title = element_blank())
 
-# Boxplots by plant vs no plant
+# Boxplots by plant treatment 
+obs_div_df_2 %>%
+  ggplot(aes(x = planted_names, y = qD, fill = planted, color = planted)) + 
+  facet_wrap(~Order.q, scales = "free") + 
+  geom_jitter(size = 2.5) + 
+  geom_boxplot(alpha = 0.5, outlier.shape = NA) + 
+  scale_color_manual(values = planted_colors) + 
+  scale_fill_manual(values = planted_colors) + 
+  labs(y = "Effective Number of ASVs") + 
+  theme_bw() +
+  theme(legend.position = "bottom",
+        axis.title.x = element_blank(),
+        legend.title = element_blank())
 
-## Boxplots by sampling date
+# Boxplots by time point 
+obs_div_df_3 %>%
+  ggplot(aes(x = growth_stage_names, y = qD, fill = growth_stage, color = growth_stage)) + 
+  facet_wrap(~Order.q, scales = "free") + 
+  geom_jitter(size = 2.5) + 
+  geom_boxplot(alpha = 0.5, outlier.shape = NA) + 
+  scale_color_manual(values = growth_stage_colors) + 
+  scale_fill_manual(values = growth_stage_colors) + 
+  labs(y = "Effective Number of ASVs") + 
+  theme_bw() +
+  theme(legend.position = "bottom",
+        axis.title.x = element_blank(),
+        legend.title = element_blank())
 
 ```
 
+# Environmental Variable Check 
 
+Applicable environmental variables are not available for this dataset. There may have been more environmental data collected, but the metadata was not available for download. The metadata csv used was constructed by inference for the purpose of this project. I did attempt to find a correlation between available variables, but the output was not informative (below).
+
+```{r environmental-pairs, fig.width=8, fig.height=8}
+head(metadata_df)
+
+# Change growth stage and n_level columns back to being numeric
+metadata_df$growth_stage <- as.numeric(metadata_df$growth_stage)
+metadata_df$n_level <- as.numeric(metadata_df$n_level)
+
+# Pull out environmental variables 
+env_df <- 
+  metadata_df %>%
+  dplyr::select(names, n_level, growth_stage)
+# inspect
+head(env_df)
+
+# plot the correlations
+pairs(dplyr::select(env_df, -names), upper.panel = NULL) 
+```
+
+# Diversity vs Nitrogen Addition
+
+```{r div-vs-n_level, fig.height=3.5, fig.width=6}
+iNEXT_manual_df %>%
+  dplyr::filter(Method == "Observed") %>%
+  ggplot(aes(x = n_level, y = qD)) + 
+  facet_wrap(.~Order.q, scales = "free") + 
+  geom_point(aes(color = n_level)) + 
+  stat_smooth(method = "lm", formula = y ~poly(x, 2)) + 
+  labs(x = "Nitrogen Addition (Kg N ha-1)", y = "# of ASVs") + 
+  scale_color_manual(values = n_colors) + 
+  theme_bw() + 
+  theme(legend.position = "bottom",
+        legend.title = element_blank()) 
+```
+
+Interpretation: Richness ranges widely for samples in low (0 Kg N ha-1) and medium (150 Kg N ha-1) nitrogen additions and a high nitrogen addition results in intermediate levels of richness. The pattern generally holds when taxa dominance (abundance) is considered in the Shannon and Inverse Simpson plots.
+
+# Session Information
+```{r session-info}
+devtools::session_info()
+```
 

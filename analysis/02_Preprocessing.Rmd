@@ -56,6 +56,13 @@ load("data/01_DADA2/ASV_counts.RData")
 
 # Inspect asv_tab
 head(asv_tab)[,1:5]
+# Fix names 
+sample_names <- colnames(asv_tab)
+samples_fixed <- sapply(strsplit(basename(sample_names), "_"), `[`,1) 
+head(samples_fixed)
+# re-write the ASV count file to fix names 
+colnames(asv_tab) <- samples_fixed
+str(asv_tab)
 ```
 
 ##  Taxonomy Table
@@ -235,8 +242,8 @@ min(sample_sums(raw_preprocessed_physeq))
 
 # Save Preprocessed Phyloseq Object
 ```{r save-physeq}
-save(raw_preprocessed_physeq,
-     file = "data/02_PreProcessing/raw_preprocessed_physeq.RData")
+#save(raw_preprocessed_physeq,
+#     file = "data/02_PreProcessing/raw_preprocessed_physeq.RData")
 ```
 
 # Session Information 

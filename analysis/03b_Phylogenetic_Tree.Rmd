@@ -1,0 +1,196 @@
+---
+title: "Phylogenetic Tree Inspection & Rooting"
+author: "Andrea Martinez"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+    code_folding: show
+    theme: spacelab
+    highlight: pygments
+    keep_md: no
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+      toc_depth: 3
+  keep_md: true  
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      fig.align = "center",
+                      # Always relevant to the document directory 
+                      # send any figure output to this folder 
+                      fig.path = "../figures/03_Phylogenetic_Tree/",
+                      warning = FALSE) 
+```
+# Goals 
+
+1. Load the fastree unrooted tree.  
+2. Add tree to phyloseq object.  
+3. Visualize and inspect tree with ggtree. 
+4. Prune ASVs, if needed.  
+5. Root our tree. 
+6. Combine new tree with a phyloseq object. 
+7. Save 2 phyloseq objects: 1. Unrooted tree phyloseq object, 2. Rooted tree phyloseq object. 
+
+# Before you start
+
+## Set my seed 
+```{r set-seed}
+# Any number can be chosen 
+set.seed(238428)
+```
+
+## Load Packages 
+```{r load-packages}
+pacman::p_load(tidyverse, phyloseq, ggtree, phytools,
+               install = FALSE)
+```
+## Load Data files 
+```{r load-data}
+# Preprocessed phyloseq object 
+load("data/02_PreProcessing/raw_preprocessed_physeq.RData")
+raw_preprocessed_physeq
+
+# Load in the tree! 
+unrooted_tree <- read.tree("data/03_Phylogenetic_Tree/ASVs_unrooted.tree")
+unrooted_tree
+str(unrooted_tree)
+```
+# Merge Phyloseq 
+```{r merge-physeq}
+# Intuition check 
+stopifnot(ntaxa(raw_preprocessed_physeq) == ntaxa(unrooted_tree))
+# Merge the tree with the phyloseq object 
+unrooted_physeq <- 
+  merge_phyloseq(raw_preprocessed_physeq, unrooted_tree)
+unrooted_physeq
+```
+
+# Plot Tree with `ggtree`
+
+```{r plot-tree-unrooted}
+# Make a basic tree
+kingdom_tree <- 
+  ggtree(unrooted_physeq) + 
+  # color tips by kingdom 
+  geom_tippoint(mapping = aes(color = Kingdom)) + 
+  scale_color_manual(values = c("goldenrod1", "cornflowerblue", "grey")) +
+  # Add title 
+  labs(title = "Unrooted Tree") + 
+  #move the legend to the bottom 
+  theme(legend.position = "bottom"); kingdom_tree
+
+kingdom_node_tree <- 
+  kingdom_tree + 
+  # Add the node label 
+  geom_text(aes(label=node), hjust= -0.5, vjust = -0.3, size = 2)
+kingdom_node_tree
+```
+
+# Evaluate Long Branches 
+
+```{r eval-long-branch}
+# View a specific clade 
+# Zoom in on origin tree: Node 2537
+viewClade(kingdom_node_tree + 
+          labs(title = "Unrooted Tree: Node 59348"), 
+          node = 59348)
+# Looks okay to me.
+
+viewClade(kingdom_node_tree + 
+          labs(title = "Unrooted Tree: Node 11351") + 
+          geom_text(aes(label=ASV)), 
+          node = 11351)
+# ASV_18392
+```
+
+```{r check-taxonomy}
+# Let's make a note of the the taxonomy and the ASV Sequence.... 
+# Let's make a note of the the taxonomy and the ASV Sequence.... 
+unrooted_physeq %>%
+  subset_taxa(., ASV == "ASV_18392") %>%
+  tax_table() %>%
+  data.frame()
+
+# Let's also check the counts of the ASV 
+unrooted_physeq %>%
+  subset_taxa(., ASV == "ASV_18392") %>%
+  otu_table() %>%
+  data.frame() %>%
+  colSums()
+
+# Present in 1 out of 35 samples with a read count of 2.
+
+# Search sequence on NCBI BLAST.
+```
+
+ASV_18392 shares 89.17% identity with Clostridium bovifaecis strain BXX. Sequences with higer similarites were labeled only as "Uncultured bacterium clone" Clostridium bovifaecis is an acetogenic bacterium found in cow manure, which could reasonably be present in an agricultural setting. However, the <90% shared identity is not high enough to confidently identify the bacteria to the species or even to the genus level. Despite its unknown identity, due to there being very counts of this ASV and its presence in only a single sample, it can be pruned from the tree.
+
+# Prune ASV_18392
+```{r prune-ASV18392}
+# Function from Joey McMurdie: https://github.com/joey711/phyloseq/issues/652
+pop_taxa = function(physeq, badTaxa){
+  allTaxa <-  taxa_names(physeq)
+  allTaxa <- allTaxa[!(allTaxa %in% badTaxa)]
+  return(prune_taxa(allTaxa, physeq))}
+
+# Let's use the pop_taxa function :) 
+# Recreate a phyloseq object without ASV_18392
+unrooted_physeq_rm18392 <- 
+  unrooted_physeq %>%
+  pop_taxa(., "ASV_18392")
+
+# Intuition Check
+ntaxa(unrooted_physeq) - ntaxa(unrooted_physeq_rm18392) 
+
+# Visually inspect 
+ggtree(unrooted_physeq_rm18392) + 
+  geom_text(aes(label=node)) +
+  geom_tippoint(mapping = aes(color = Kingdom))
+```
+
+# Midroot Tree
+```{r midroot-tree}
+# Is the tree rooted?
+new_unrooted_tree <-phy_tree(unrooted_physeq_rm18392)
+is.rooted(new_unrooted_tree)
+
+# Let's midpoint root the tree
+midpoint_rooted_tree <- midpoint.root(new_unrooted_tree)
+
+# Is the new tree rooted?
+is.rooted(midpoint_rooted_tree)
+
+# Assign to a new phyloseq object: merging subsetted phyloseq with the new rooted tree
+
+# 1. Create the phyloseq object without ASV_18392
+physeq_rm18392 <- 
+  raw_preprocessed_physeq %>%
+  subset_taxa(ASV != "ASV_18392")
+
+# Merge tree with the new physeq_rm18392
+midroot_physeq_rm18392 <- 
+  merge_phyloseq(physeq_rm18392, midpoint_rooted_tree)
+midroot_physeq_rm18392
+
+# Quick inspection of tree 
+ggtree(midroot_physeq_rm18392) + 
+  geom_tippoint(mapping = aes(color = Kingdom))
+```
+
+# Save to a new phyloseq object
+```{r save-physeq}
+# Save both phyloseq objects with our tree object to one .RData file 
+save(list = c("unrooted_physeq_rm18392", "midroot_physeq_rm18392"),
+     file = "data/03_Phylogenetic_Tree/phytree_preprocessed_physeq.RData")
+```
+
+# Session Information 
+```{r session-info}
+# Ensure reproducibility 
+devtools::session_info()
+```

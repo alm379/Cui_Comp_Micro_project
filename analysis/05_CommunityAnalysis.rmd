@@ -483,13 +483,15 @@ phylum_df <-
   dplyr::filter(Abundance > 0.01)
 ```
 
-```{r phylum-plot, fig.width=8, fig.height=9}
+```{r phylum-plot, fig.width=8, fig.height=10}
 
-phylum_df %>%
+planted_phylum_subset <- subset(phylum_df,planted == "Planted")
+
+planted_phylum_subset %>%
   # Warning: It's important to have one sample per x value, 
   # otherwise, it will take the sum between multiple samples
-  ggplot(aes(x = planted, y = Abundance, fill = Phylum)) + 
-  facet_grid(Phylum~growth_stage~n_level, scale = "free") + 
+  ggplot(aes(x = n_level,growth_stage, y = Abundance, fill = Phylum)) + 
+  facet_grid(Phylum~growth_stage, scale = "free") + 
   geom_bar(stat = "identity", color = "black") + 
   labs(title = "Surface Phylum Composition") + 
   scale_fill_manual(values = phylum_colors) + 

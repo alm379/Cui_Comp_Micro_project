@@ -439,6 +439,9 @@ Variance of Sorensen influenced by nitrogen level.
 # Set the phylum colors
 phylum_colors <- c(
   Acidobacteriota = "navy", 
+  Actinobacteria = "purple",
+  Gemmatimonadota = "orange",
+  Patescibacteria = "lightpink",
   Firmacutes = "darkslategray2", 
   Armatimonadota = "deeppink1",
   Alphaproteobacteria = "plum2", 
@@ -458,7 +461,7 @@ phylum_colors <- c(
   Proteobacteria = "royalblue",
   Planctomycetota = "darkorange", 
   "SAR324 clade(Marine group B)" = "olivedrab",
-  #Proteobacteria_unclassified = "greenyellow",
+  "WPS-2"= "greenyellow",
   Thermoplasmatota = "green",
   Verrucomicrobiota = "darkorchid1")
  # Other = "grey")
@@ -482,7 +485,6 @@ phylum_df <-
 
 ```{r phylum-plot, fig.width=8, fig.height=9}
 
-
 phylum_df %>%
   # Warning: It's important to have one sample per x value, 
   # otherwise, it will take the sum between multiple samples
@@ -493,7 +495,7 @@ phylum_df %>%
   scale_fill_manual(values = phylum_colors) + 
   theme_bw() + 
   theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
-        strip.text.y = element_text(size = 5))
+        strip.text.y = element_text(size = 5, angle = 90))
 ```
 
 ```{r phylum-station-firmicutes, fig.width=5, fig.height=3.5}
@@ -502,15 +504,15 @@ phylum_df %>%
 phylum_df %>%
   dplyr::filter(Phylum == "Firmicutes") %>%
   # build the plot 
-  ggplot(aes(x = as.factor(planted), y = Abundance, 
-             fill = as.factor(planted), color = as.factor(planted))) + 
+  ggplot(aes(x = planted, y = Abundance, 
+             fill = planted, color = planted)) + 
   facet_wrap(.~Phylum, scales = "free_y", nrow = 1) + 
   geom_boxplot(alpha = 0.5, outlier.shape = NA) + # outliers not plotted here in boxplot 
   geom_jitter() + 
   theme_bw() + 
-  labs(title = "Firmicutes Phylum Abundance") + 
-  scale_color_manual(values = as.factor(planted_colors)) + 
-  scale_fill_manual(values = as.factor(planted_colors)) + 
+  labs(title = "Firmicutes Phylum Abundance", ylab = "Planted") + 
+  scale_color_manual(values = planted_colors) + 
+  scale_fill_manual(values = planted_colors) + 
     theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
           legend.position = "right")
 # Statistically: Kruskall-Wallis followed by a Tukey's Posthoc test
@@ -538,17 +540,113 @@ family_df <-
 family_df %>%
   dplyr::filter(Phylum == "Firmicutes") %>%
   # build the plot 
-  ggplot(aes(x = as.factor(planted), y = Abundance, 
-             fill = as.factor(planted), color = as.factor(planted))) + 
-  facet_wrap(.~Family, scales = "free_y", nrow = 1) +
+  ggplot(aes(x = planted, y = Abundance, 
+             fill = planted, color = planted)) + 
+  facet_wrap(.~Family, scales = "free_y", nrow = 1) + 
   geom_boxplot(alpha = 0.5, outlier.shape = NA) + # outliers not plotted here in boxplot 
   geom_jitter() + 
   theme_bw() + 
-  labs(title = "Firmicutes Family Abundance") + 
-  scale_color_manual(values = as.factor(planted_colors)) + 
-  scale_fill_manual(values = as.factor(planted_colors)) + 
+  labs(title = "Firmicutes Family Abundance", ylab = "Planted") + 
+  scale_color_manual(values = planted_colors) + 
+  scale_fill_manual(values = planted_colors) + 
     theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
-          legend.position = "bottom")
+          legend.position = "right")
+
+#Caulobacteraceae - keystone taxa identified by Cui et al.for sampling on day 30.
+family_df %>%
+  dplyr::filter(Family == "Caulobacteraceae") %>%
+  # build the plot 
+  ggplot(aes(x = planted, y = Abundance, 
+             fill = planted, color = planted)) + 
+  facet_wrap(.~Family, scales = "free_y", nrow = 1) + 
+  geom_boxplot(alpha = 0.5, outlier.shape = NA) + # outliers not plotted here in boxplot 
+  geom_jitter() + 
+  theme_bw() + 
+  labs(title = "Caulobacteraceae Family Abundance Planted vs. Unplanted", ylab = "Planted") + 
+  scale_color_manual(values = planted_colors) + 
+  scale_fill_manual(values = planted_colors) + 
+    theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
+          legend.position = "right")
+
+family_df %>%
+  dplyr::filter(Family == "Caulobacteraceae") %>%
+  # build the plot 
+  ggplot(aes(x = growth_stage, y = Abundance, 
+             fill = as.factor(growth_stage), color = as.factor(growth_stage))) + 
+  facet_wrap(.~Family, scales = "free_y", nrow = 1) + 
+  geom_boxplot(alpha = 0.5, outlier.shape = NA) + # outliers not plotted here in boxplot 
+  geom_jitter() + 
+  theme_bw() + 
+  labs(title = "Caulobacteraceae Family Abundance", xlab = ("Growth Stage")) + 
+  scale_color_manual(values = growth_stage_colors) + 
+  scale_fill_manual(values = growth_stage_colors) + 
+    theme(axis.text.x = element_text(),
+          legend.position = "right", legend.title=element_blank())
+
+#Chitinophagaceae - keystone taxa identified by Cui et al.for sampling on day 30.
+family_df %>%
+  dplyr::filter(Family == "Chitinophagaceae") %>%
+  # build the plot 
+  ggplot(aes(x = growth_stage, y = Abundance, 
+             fill = as.factor(growth_stage), color = as.factor(growth_stage))) + 
+  facet_wrap(.~Family, scales = "free_y", nrow = 1) + 
+  geom_boxplot(alpha = 0.5, outlier.shape = NA) + # outliers not plotted here in boxplot 
+  geom_jitter() + 
+  theme_bw() + 
+  labs(title = "Chitinophagaceae Family Abundance", xlab = ("Growth Stage")) + 
+  scale_color_manual(values = growth_stage_colors) + 
+  scale_fill_manual(values = growth_stage_colors) + 
+    theme(axis.text.x = element_text(),
+          legend.position = "right", legend.title=element_blank())
+
+family_df %>%
+  dplyr::filter(Family == "Chitinophagaceae") %>%
+  # build the plot 
+  ggplot(aes(x = planted, y = Abundance, 
+             fill = planted, color = planted)) + 
+  facet_wrap(.~Family, scales = "free_y", nrow = 1) + 
+  geom_boxplot(alpha = 0.5, outlier.shape = NA) + # outliers not plotted here in boxplot 
+  geom_jitter() + 
+  theme_bw() + 
+  labs(title = "Chitinophagaceae Family Abundance Planted vs. Unplanted", xlab = ("Planted")) + 
+  scale_color_manual(values = planted_colors) + 
+  scale_fill_manual(values = planted_colors) + 
+    theme(axis.text.x = element_text(),
+          legend.position = "right", legend.title=element_blank())
+
+# Xanthobacteraceae - keystone taxa identified by Cui et al.for sampling on day 75
+family_df %>%
+  dplyr::filter(Family == "Xanthobacteraceae") %>%
+  # build the plot 
+  ggplot(aes(x = growth_stage, y = Abundance, 
+             fill = as.factor(growth_stage), color = as.factor(growth_stage))) + 
+  facet_wrap(.~Family, scales = "free_y", nrow = 1) + 
+  geom_boxplot(alpha = 0.5, outlier.shape = NA) + # outliers not plotted here in boxplot 
+  geom_jitter() + 
+  theme_bw() + 
+  labs(title = "Xanthobacteraceae Family Abundance", xlab = ("Growth Stage")) + 
+  scale_color_manual(values = growth_stage_colors) + 
+  scale_fill_manual(values = growth_stage_colors) + 
+    theme(axis.text.x = element_text(),
+          legend.position = "right", legend.title=element_blank())
+
+family_df %>%
+  dplyr::filter(Family == "Xanthobacteraceae") %>%
+  # build the plot 
+  ggplot(aes(x = planted, y = Abundance, 
+             fill = planted, color = planted)) + 
+  facet_wrap(.~Family, scales = "free_y", nrow = 1) + 
+  geom_boxplot(alpha = 0.5, outlier.shape = NA) + # outliers not plotted here in boxplot 
+  geom_jitter() + 
+  theme_bw() + 
+  labs(title = "Xanthobacteraceae Family Abundance Planted vs. Unplanted", xlab = ("Planted")) + 
+  scale_color_manual(values = planted_colors) + 
+  scale_fill_manual(values = planted_colors) + 
+    theme(axis.text.x = element_text(),
+          legend.position = "right", legend.title=element_blank())
+
+
+
 ```
 
 ## Genus
@@ -569,17 +667,113 @@ genus_df <-
 genus_df %>%
   dplyr::filter(Phylum == "Firmicutes") %>%
   # build the plot 
-  ggplot(aes(x = as.factor(planted), y = Abundance, 
-             fill = as.factor(planted), color = as.factor(planted))) + 
-  facet_wrap(.~Genus, scales = "free_y", nrow = 1) +
+  ggplot(aes(x = planted, y = Abundance, 
+             fill = planted, color = planted)) + 
+  facet_wrap(.~Family, scales = "free_y", nrow = 1) + 
   geom_boxplot(alpha = 0.5, outlier.shape = NA) + # outliers not plotted here in boxplot 
   geom_jitter() + 
   theme_bw() + 
-  labs(title = "Firmicutes Family Abundance") + 
-  scale_color_manual(values = as.factor(planted_colors)) + 
-  scale_fill_manual(values = as.factor(planted_colors)) + 
+  labs(title = "Firmicutes Genus Abundance", ylab = "Planted") + 
+  scale_color_manual(values = planted_colors) + 
+  scale_fill_manual(values = planted_colors) + 
     theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
-          legend.position = "bottom")
+          legend.position = "right")
+
+
+#Bacillus - keystone taxa identified by Cui et al.for sampling on day 30
+genus_df %>%
+  dplyr::filter(Genus == "Bacillus") %>%
+  # build the plot 
+  ggplot(aes(x = growth_stage, y = Abundance, 
+             fill = as.factor(growth_stage), color = as.factor(growth_stage))) + 
+  facet_wrap(.~Family, scales = "free_y", nrow = 1) + 
+  geom_boxplot(alpha = 0.5, outlier.shape = NA) + # outliers not plotted here in boxplot 
+  geom_jitter() + 
+  theme_bw() + 
+  labs(title = "Bacillus Genus Abundance", xlab = ("Growth Stage")) + 
+  scale_color_manual(values = growth_stage_colors) + 
+  scale_fill_manual(values = growth_stage_colors) + 
+    theme(axis.text.x = element_text(),
+          legend.position = "bottom", legend.title=element_blank())
+
+genus_df %>%
+  dplyr::filter(Genus == "Bacillus") %>%
+  # build the plot 
+  ggplot(aes(x = planted, y = Abundance, 
+             fill = as.factor(planted), color = as.factor(planted))) + 
+  facet_wrap(.~Family, scales = "free_y", nrow = 1) + 
+  geom_boxplot(alpha = 0.5, outlier.shape = NA) + # outliers not plotted here in boxplot 
+  geom_jitter() + 
+  theme_bw() + 
+  labs(title = "Bacillus Genus Abundance Planted vs. Unplanted", xlab = ("Planted")) + 
+  scale_color_manual(values = planted_colors) + 
+  scale_fill_manual(values = planted_colors) + 
+    theme(axis.text.x = element_text(),
+          legend.position = "bottom", legend.title=element_blank())
+
+#Gemmatimonas - keystone taxa identified by Cui et al.for sampling on day 75
+
+genus_df %>%
+  dplyr::filter(Genus == "Gemmatimonas") %>%
+  # build the plot 
+  ggplot(aes(x = growth_stage, y = Abundance, 
+             fill = as.factor(growth_stage), color = as.factor(growth_stage))) + 
+  facet_wrap(.~Family, scales = "free_y", nrow = 1) + 
+  geom_boxplot(alpha = 0.5, outlier.shape = NA) + # outliers not plotted here in boxplot 
+  geom_jitter() + 
+  theme_bw() + 
+  labs(title = "Gemmatimonas Genus Abundance", xlab = ("Growth Stage")) + 
+  scale_color_manual(values = growth_stage_colors) + 
+  scale_fill_manual(values = growth_stage_colors) + 
+    theme(axis.text.x = element_text(),
+          legend.position = "bottom", legend.title=element_blank())
+
+genus_df %>%
+  dplyr::filter(Genus == "Gemmatimonas") %>%
+  # build the plot 
+  ggplot(aes(x = planted, y = Abundance, 
+             fill = as.factor(planted), color = as.factor(planted))) + 
+  facet_wrap(.~Family, scales = "free_y", nrow = 1) + 
+  geom_boxplot(alpha = 0.5, outlier.shape = NA) + # outliers not plotted here in boxplot 
+  geom_jitter() + 
+  theme_bw() + 
+  labs(title = "Gemmatimonas Genus Abundance Planted vs", xlab = ("Planted")) + 
+  scale_color_manual(values = planted_colors) + 
+  scale_fill_manual(values = planted_colors) + 
+    theme(axis.text.x = element_text(),
+          legend.position = "bottom", legend.title=element_blank())
+
+#Candidatus Koribacter - keystone taxa identified by Cui et al.for sampling on day 75
+
+genus_df %>%
+  dplyr::filter(Genus == "Candidatus Koribacter") %>%
+  # build the plot 
+  ggplot(aes(x = growth_stage, y = Abundance, 
+             fill = as.factor(growth_stage), color = as.factor(growth_stage))) + 
+  facet_wrap(.~Family, scales = "free_y", nrow = 1) + 
+  geom_boxplot(alpha = 0.5, outlier.shape = NA) + # outliers not plotted here in boxplot 
+  geom_jitter() + 
+  theme_bw() + 
+  labs(title = "Candidatus Koribacter Genus Abundance", xlab = ("Growth Stage")) + 
+  scale_color_manual(values = growth_stage_colors) + 
+  scale_fill_manual(values = growth_stage_colors) + 
+    theme(axis.text.x = element_text(),
+          legend.position = "bottom", legend.title=element_blank())
+
+genus_df %>%
+  dplyr::filter(Genus == "Candidatus Koribacter") %>%
+  # build the plot 
+  ggplot(aes(x = planted, y = Abundance, 
+             fill = as.factor(planted), color = as.factor(planted))) + 
+  facet_wrap(.~Family, scales = "free_y", nrow = 1) + 
+  geom_boxplot(alpha = 0.5, outlier.shape = NA) + # outliers not plotted here in boxplot 
+  geom_jitter() + 
+  theme_bw() + 
+  labs(title = "Candidatus Koribacter Genus Abundance Planted vs", xlab = ("Planted")) + 
+  scale_color_manual(values = planted_colors) + 
+  scale_fill_manual(values = planted_colors) + 
+    theme(axis.text.x = element_text(),
+          legend.position = "bottom", legend.title=element_blank())
 
 ```
 
